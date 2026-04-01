@@ -1,0 +1,87 @@
+# Remove all tracked files from staging
+git rm -r --cached .
+
+# Create PROPER .gitignore
+cat > .gitignore << 'EOF'
+# Model files - DO NOT COMMIT
+*.h5
+*.hdf5
+*.pkl
+*.pth
+*.pt
+*.joblib
+models/
+saved_models/
+
+# Data directories - DO NOT COMMIT
+data/
+dataset/
+uploads/
+processed_data/
+raw_data/
+Fruit-Images-Dataset-master/
+
+# Large files
+*.zip
+*.tar.gz
+*.7z
+*.rar
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Environment
+.env
+venv/
+.venv/
+env/
+
+# Visualizations
+visualizations/
+plots/
+*.png
+*.jpg
+*.jpeg
+*.gif
+
+# TensorFlow
+checkpoints/
+training_checkpoints/
+EOF

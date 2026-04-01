@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Classification Dashboard</title>
+
+    <style>
+        /* ======== GLOBAL RESET ======== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* ======== NAVBAR ======== */
+        .navbar {
+            background: rgba(0,0,0,0.9);
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .nav-content h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .subtitle { font-size: 0.9em; opacity: .8; font-style: italic; }
+
+        /* ======== MAIN LAYOUT ======== */
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        section {
+            background: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: slideUp .5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        section h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .section-content { display: flex; flex-direction: column; gap: 20px; }
+
+        /* ======== METRICS ======== */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+            gap: 20px;
+        }
+        .metric-card {
+            background: linear-gradient(135deg,#667eea,#764ba2);
+            color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(102,126,234,.3);
+        }
+        .metric-card:hover { transform: translateY(-5px); }
+        .metric-value { font-size: 2em; font-weight: bold; }
+        .status-good  { color: #4caf50; }
+        .status-idle  { color: #ffc107; }
+        .status-bad   { color: #f44336; }
+
+        /* ======== FORMS + BUTTONS ======== */
+        input[type=file] {
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: 0;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #fff;
+        }
+        .btn-primary { background: linear-gradient(135deg,#667eea,#764ba2); }
+        .btn-success { background: linear-gradient(135deg,#4caf50,#45a049); }
+
+        /* ======== IMAGE PREVIEW ======== */
+        .image-preview {
+            max-width: 300px;
+            height: 300px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .image-preview.active { display: flex; }
+        .image-preview img { max-width: 100%; max-height: 100%; }
+
+        /* ======== RESULTS ======== */
+        .result-box {
+            margin-top: 15px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+        .success { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .error   { background: #ffebee; border-left: 4px solid #f44336; }
+
+        /* ======== FOOTER ======== */
+        .footer {
+            background: rgba(0,0,0,0.9);
+            color: #fff;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 60px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ============================== NAVBAR ============================== -->
+    <nav class="navbar">
+        <div class="nav-content">
+            <h1>🍎 Fruit Classification Pipeline</h1>
+            <p class="subtitle">Real-time ML Model Monitoring & Management</p>
+        </div>
+    </nav>
+
+    <!-- ============================== MAIN CONTAINER ============================== -->
+    <div class="container">
+
+        <!-- ========== METRICS ========== -->
+        <section class="metrics-section">
+            <h2>📊 System Metrics</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Uptime</h3>
+                    <p id="uptime" class="metric-value">00:00:00</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Total Requests</h3>
+                    <p id="total-requests" class="metric-value">0</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Avg Response Time</h3>
+                    <p id="avg-response" class="metric-value">0.00</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Requests/min</h3>
+                    <p id="req-per-min" class="metric-value">0.00</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Model Status</h3>
+                    <p id="model-status" class="metric-value status-good">ACTIVE</p>
+                </div>
+                <div class="metric-card">
+                    <h3>Retraining</h3>
+                    <p id="retrain-status" class="metric-value status-idle">IDLE</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== PREDICTION ========== -->
+        <section class="prediction-section">
+            <h2>🔮 Make Prediction</h2>
+            <div class="section-content">
+                <input type="file" id="image-input" accept="image/*" onchange="previewImage()">
+                <div id="image-preview" class="image-preview"></div>
+                <button class="btn btn-primary" onclick="makePrediction()">🚀 Predict</button>
+                <div id="prediction-result"></div>
+            </div>
+        </section>
+
+        <!-- ========== RETRAIN MODEL ========== -->
+        <section class="retrain-section">
+            <h2>🔄 Retrain Model</h2>
+            <div class="section-content">
+                <p>Upload a .zip file containing new images to trigger background retraining.</p>
+                <input type="file" id="retrain-file" accept=".zip">
+                <button class="btn btn-success" onclick="retrainModel()">⚙️ Upload and Retrain</button>
+                <div id="retrain-status-msg"></div>
+            </div>
+        </section>
+
+        <!-- ========== MODEL INFO ========== -->
+        <section>
+            <h2>ℹ️ Model Information</h2>
+            <div id="model-info"><p>Loading…</p></div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>🤖 Fruit Classification ML Pipeline</p>
+        <p id="footer-timestamp"></p>
+    </footer>
+
+    <!-- ============================== JAVASCRIPT ============================== -->
+    <script>
+        const API_URL = "http://localhost:5000";
+
+        // Auto-run updates
+        setInterval(updateMetrics, 2000);
+        updateMetrics();
+        loadModelInfo();
+        updateFooterTimestamp();
+        setInterval(updateFooterTimestamp, 1000);
+
+        /* ------------------- METRICS ------------------- */
+        async function updateMetrics() {
+            try {
+                const res = await fetch(API_URL + "/metrics");
+                const data = await res.json();
+
+                const uptime = Math.floor(data.uptime_seconds);
+                const h = String(Math.floor(uptime / 3600)).padStart(2,'0');
+                const m = String(Math.floor((uptime % 3600) / 60)).padStart(2,'0');
+                const s = String(uptime % 60).padStart(2,'0');
+
+                document.getElementById("uptime").textContent = `${h}:${m}:${s}`;
+                document.getElementById("total-requests").textContent = data.total_requests;
+                document.getElementById("avg-response").textContent = data.average_response_time_ms.toFixed(2);
+                document.getElementById("req-per-min").textContent = data.requests_per_minute.toFixed(2);
+
+                if (data.retraining) {
+                    document.getElementById("retrain-status").textContent = "PROCESSING";
+                } else {
+                    document.getElementById("retrain-status").textContent = "IDLE";
+                }
+            } catch (e) {
+                document.getElementById("model-status").textContent = "OFFLINE";
+                document.getElementById("model-status").className = "metric-value status-bad";
+            }
+        }
+
+        /* ------------------- LOAD MODEL INFO ------------------- */
+        async function loadModelInfo() {
+            try {
+                const res = await fetch(API_URL + "/model-info");
+                const d = await res.json();
+
+                document.getElementById("model-info").innerHTML = `
+                    <p><strong>Classes:</strong> ${d.classes.join(", ")}</p>
+                    <p><strong>Input Size:</strong> ${d.input_size.join(" × ")}</p>
+                    <p><strong>Model File:</strong> ${d.model_file}</p>
+                `;
+            } catch {
+                document.getElementById("model-info").innerHTML = `<p class="error">Failed to load model info</p>`;
+            }
+        }
+
+        /* ------------------- IMAGE PREVIEW ------------------- */
+        function previewImage() {
+            const file = document.getElementById("image-input").files[0];
+            const preview = document.getElementById("image-preview");
+
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.innerHTML = `<img src="${e.target.result}">`;
+                preview.classList.add("active");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /* ------------------- PREDICTION ------------------- */
+        async function makePrediction() {
+            const file = document.getElementById("image-input").files[0];
+            const resultDiv = document.getElementById("prediction-result");
+
+            if (!file) {
+                resultDiv.innerHTML = `<div class="result-box error">Please select an image.</div>`;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            resultDiv.innerHTML = `<div class="result-box">Processing...</div>`;
+
+            try {
+                const res = await fetch(API_URL + "/predict", { method: "POST", body: formData });
+                const data = await res.json();
+
+                resultDiv.innerHTML = `
+                    <div class="result-box success">
+                        <h3>Prediction</h3>
+                        <p><strong>Fruit:</strong> ${data.prediction.class}</p>
+                        <p><strong>Confidence:</strong> ${(data.prediction.confidence * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+            } catch {
+                resultDiv.innerHTML = `<div class="result-box error">Prediction failed</div>`;
+            }
+        }
+
+        /* ------------------- RETRAINING ------------------- */
+        async function retrainModel() {
+            const file = document.getElementById("retrain-file").files[0];
+            const statusDiv = document.getElementById("retrain-status-msg");
+
+            if (!file) {
+                statusDiv.innerHTML = `<div class="result-box error">Please select a .zip file.</div>`;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+            statusDiv.innerHTML = `<div class="result-box">Uploading and triggering retrain...</div>`;
+
+            try {
+                const res = await fetch(API_URL + "/retrain", { method: "POST", body: formData });
+                const data = await res.json();
+                
+                if (res.ok || res.status === 202) {
+                    statusDiv.innerHTML = `
+                        <div class="result-box success">
+                            <h3>✅ Retraining Started</h3>
+                            <p>${data.message}</p>
+                        </div>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `<div class="result-box error">${data.error}</div>`;
+                }
+            } catch {
+                statusDiv.innerHTML = `<div class="result-box error">Failed to connect to retraining API.</div>`;
+            }
+        }
+
+        /* ------------------- FOOTER CLOCK ------------------- */
+        function updateFooterTimestamp() {
+            const now = new Date();
+            document.getElementById("footer-timestamp").textContent =
+                now.toLocaleString();
+        }
+    </script>
+
+</body>
+</html>

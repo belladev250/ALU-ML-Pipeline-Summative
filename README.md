@@ -487,7 +487,7 @@ locust -f locustfile.py --host=http://localhost:5000 -u 200 -r 40 -t 10m
 
 ## 📹 Video Demo
 
-**YouTube Link**: [Insert YouTube URL Here]
+**YouTube Link**: [https://youtu.be/ujmNQL2d268]
 
 Video covers:
 - ✅ Making single predictions
